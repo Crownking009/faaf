@@ -50,7 +50,7 @@ a{color:#8a5a1d;font-weight:700;}
 <main>
 <h1>PHP is required for the admin panel</h1>
 <p>The storefront preview server can show HTML, CSS, and JavaScript, but it cannot run PHP admin pages.</p>
-<p>Open this project through a PHP-enabled server like cPanel, Apache, XAMPP, WAMP, or Laragon, then visit <code>/admin/login.php</code>.</p>
+<p>Open <code>/admin/login.html</code> from the local preview server to access the HTML admin panel.</p>
 <p><a href="/index.html">Back to storefront</a></p>
 </main>
 </body>

@@ -104,8 +104,43 @@ function cloneDemoData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function deriveCategoriesFromProducts(products) {
+  const map = new Map();
+  (products || []).forEach((product) => {
+    const slug = product.category_slug || (product.category_name ? product.category_name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'uncategorized');
+    const name = product.category_name || 'Uncategorized';
+    if (!map.has(slug)) {
+      map.set(slug, { id: map.size + 1, name, slug, gender: product.gender || 'unisex', sort_order: map.size + 1, product_count: 0 });
+    }
+    map.get(slug).product_count += 1;
+  });
+  return Array.from(map.values());
+}
+
+function getCurrentDemoCatalog() {
+  const fallback = window.FAAF_DEMO_DATA || { products: [], categories: [] };
+  let products = fallback.products || [];
+  let categories = fallback.categories || [];
+
+  try {
+    const saved = localStorage.getItem('faaf_admin_products_v1');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) {
+        products = parsed;
+        categories = deriveCategoriesFromProducts(parsed);
+      }
+    }
+  } catch (err) {
+    console.warn('Unable to load updated storefront catalog.', err);
+  }
+
+  return { ...fallback, products, categories };
+}
+
 function demoProductList(params) {
-  let products = window.FAAF_DEMO_DATA.products.filter(p => p.status === 'active');
+  const catalog = getCurrentDemoCatalog();
+  let products = catalog.products.filter(p => p.status === 'active');
 
   if (params.get('category')) {
     products = products.filter(p => p.category_slug === params.get('category'));
@@ -159,13 +194,15 @@ function demoApiGet(path) {
   const endpoint = url.pathname.split('/').pop();
   const params = url.searchParams;
 
+  const catalog = getCurrentDemoCatalog();
+
   if (endpoint === 'categories.php') {
-    return { categories: cloneDemoData(window.FAAF_DEMO_DATA.categories) };
+    return { categories: cloneDemoData(catalog.categories) };
   }
 
   if (endpoint === 'products.php') {
     if (params.get('action') === 'detail') {
-      const product = window.FAAF_DEMO_DATA.products.find(p => p.slug === params.get('slug') && p.status === 'active');
+      const product = catalog.products.find(p => p.slug === params.get('slug') && p.status === 'active');
       if (!product) throw new Error('Product not found');
       return { product: cloneDemoData(product) };
     }

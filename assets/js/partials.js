@@ -91,7 +91,7 @@ function footerHTML() {
           <ul>
             <li><a href="terms.html">Terms of Service</a></li>
             <li><a href="privacy.html">Privacy Policy</a></li>
-            <li><a href="/admin/login.php" data-admin-link>Admin</a></li>
+            <li><a href="/admin/login.html" data-admin-link>Admin</a></li>
           </ul>
         </div>
       </div>
@@ -240,7 +240,7 @@ function initAdminFooterLink() {
         const res = await fetch(href, { method: 'GET', cache: 'no-store' });
         const type = res.headers.get('content-type') || '';
         if (res.status === 501 || type.includes('application/octet-stream') || type.includes('text/plain')) {
-          alert('The admin panel needs to run on a PHP-enabled server. Open this site through Apache/cPanel/XAMPP, then visit /admin/login.php.');
+          alert('The admin panel is available locally as static HTML. Open /admin/login.html from the preview server to continue.');
           return;
         }
       } catch (err) {
