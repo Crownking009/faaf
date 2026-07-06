@@ -318,9 +318,15 @@ function initBackToTop() {
   btn.setAttribute('aria-label', 'Back to top');
   btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
   document.body.appendChild(btn);
-  window.addEventListener('scroll', () => {
-    btn.classList.toggle('show', window.scrollY > 600);
-  }, { passive: true });
+
+  const updateVisibility = () => {
+    const threshold = window.innerWidth <= 760 ? 180 : 600;
+    btn.classList.toggle('show', window.scrollY > threshold);
+  };
+
+  updateVisibility();
+  window.addEventListener('scroll', updateVisibility, { passive: true });
+  window.addEventListener('resize', updateVisibility);
   btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 

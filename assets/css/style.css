@@ -106,7 +106,9 @@ p{margin:0;}
 }
 .site-header.scrolled{box-shadow:0 6px 24px rgba(21,19,15,.07);}
 .header-row{display:flex;align-items:center;justify-content:space-between;height:84px;}
-.logo{display:flex;flex-direction:column;line-height:1;}
+.logo{display:flex;align-items:center;gap:12px;line-height:1;}
+.logo .logo-mark,.footer-logo-mark{width:46px;height:46px;object-fit:contain;flex-shrink:0;}
+.logo .logo-text{display:flex;flex-direction:column;}
 .logo .mark{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.01em;}
 .logo .mark span{color:var(--gold-deep);}
 .logo .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.18em;color:var(--muted);margin-top:3px;text-transform:uppercase;}
@@ -268,7 +270,7 @@ p{margin:0;}
 .product-info .price .was{font-size:13px;color:var(--muted);text-decoration:line-through;}
 
 @media(max-width:1100px){.product-grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:760px){.product-grid{grid-template-columns:repeat(2,1fr);}.product-grid.cols-shop{gap:14px;}}
+@media(max-width:760px){.product-grid{grid-template-columns:repeat(2,1fr);}.product-grid.cols-shop{gap:14px;}.logo{gap:8px;}.logo .logo-mark,.footer-logo-mark{width:38px;height:38px;}.logo .mark{font-size:22px;}.logo .tag{font-size:8px;letter-spacing:.12em;}}
 
 /* ---------- Promo / lookbook band ---------- */
 .promo-band{
@@ -312,7 +314,7 @@ p{margin:0;}
 .footer-grid ul li{margin-bottom:11px;}
 .footer-grid a{font-size:14px;color:#cfc7ad;transition:.2s;}
 .footer-grid a:hover{color:var(--gold);}
-.footer-logo{font-family:var(--font-display);font-size:26px;color:var(--white);font-weight:700;margin-bottom:14px;}
+.footer-logo{display:flex;align-items:center;gap:12px;font-family:var(--font-display);font-size:26px;color:var(--white);font-weight:700;margin-bottom:14px;}
 .footer-logo span{color:var(--gold);}
 .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding:24px 0;font-size:12.5px;color:#9b9379;flex-wrap:wrap;gap:10px;}
 .social-row{display:flex;gap:10px;}

@@ -369,6 +369,7 @@ async function initHomePage() {
       prevBtn: document.querySelector('#featuredPrev'),
       nextBtn: document.querySelector('#featuredNext'),
       dotsWrap: document.querySelector('#featuredDots'),
+      autoplayMs: window.innerWidth < 760 ? 1800 : 0,
     });
     carousel?.refresh(Math.max(1, featured.length - 2));
     initTiltHover('#featuredGrid .product-card');

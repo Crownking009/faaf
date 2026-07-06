@@ -11,8 +11,11 @@ function headerHTML(active) {
   <header class="site-header">
     <div class="container header-row">
       <a href="index.html" class="logo">
-        <span class="mark">FAAF<span>.</span></span>
-        <span class="tag">Collections &amp; Souvenirs</span>
+        <img src="assets/images/favicon.svg" alt="FAAF Collections logo" class="logo-mark" />
+        <span class="logo-text">
+          <span class="mark">FAAF<span>.</span></span>
+          <span class="tag">Collections &amp; Souvenirs</span>
+        </span>
       </a>
       <nav class="main-nav">
         ${link('index.html', 'Home', 'home')}
@@ -51,7 +54,10 @@ function footerHTML() {
     <div class="container">
       <div class="footer-grid">
         <div>
-          <div class="footer-logo">FAAF<span>.</span></div>
+          <div class="footer-logo">
+            <img src="assets/images/favicon.svg" alt="FAAF Collections logo" class="footer-logo-mark" />
+            <span>FAAF<span>.</span></span>
+          </div>
           <p style="font-size:14px;line-height:1.7;max-width:280px;">Lagos's go-to store for fashion essentials and party souvenirs — bright pieces for every man and woman, every occasion.</p>
           <div class="social-row" style="margin-top:20px;">
             <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>

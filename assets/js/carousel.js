@@ -4,7 +4,7 @@
    2) initFadeCarousel   — fading full-width slides with autoplay + swipe (Featured Collections)
    ===================================================== */
 
-function initScrollCarousel(trackEl, { prevBtn, nextBtn, dotsWrap } = {}) {
+function initScrollCarousel(trackEl, { prevBtn, nextBtn, dotsWrap, autoplayMs = 0 } = {}) {
   if (!trackEl) return;
 
   function itemWidth() {
@@ -50,16 +50,48 @@ function initScrollCarousel(trackEl, { prevBtn, nextBtn, dotsWrap } = {}) {
   nextBtn?.addEventListener('click', () => trackEl.scrollBy({ left: itemWidth() * (window.innerWidth < 760 ? 1 : 2), behavior: 'smooth' }));
 
   let scrollTimer;
+  let autoplayTimer;
+  let autoplayActive = autoplayMs > 0;
+
+  function advanceAutoplay() {
+    if (!autoplayActive) return;
+    const maxScroll = Math.max(0, trackEl.scrollWidth - trackEl.clientWidth - 4);
+    if (trackEl.scrollLeft >= maxScroll) {
+      trackEl.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      const step = itemWidth() * (window.innerWidth < 760 ? 1 : 2);
+      trackEl.scrollBy({ left: step, behavior: 'smooth' });
+    }
+    updateArrows();
+    updateDots();
+  }
+
+  function startAutoplay() {
+    if (!autoplayActive) return;
+    clearInterval(autoplayTimer);
+    autoplayTimer = setInterval(advanceAutoplay, autoplayMs);
+  }
+
+  function stopAutoplay() {
+    clearInterval(autoplayTimer);
+  }
+
+  trackEl.addEventListener('mouseenter', stopAutoplay);
+  trackEl.addEventListener('mouseleave', startAutoplay);
+  window.addEventListener('resize', startAutoplay);
   trackEl.addEventListener('scroll', () => {
     clearTimeout(scrollTimer);
     scrollTimer = setTimeout(() => { updateArrows(); updateDots(); }, 60);
   }, { passive: true });
+
+  startAutoplay();
 
   return {
     refresh(dotCount = 5) {
       buildDots(dotCount);
       updateArrows();
       updateDots();
+      startAutoplay();
     },
   };
 }
@@ -121,6 +153,41 @@ function initFadeCarousel(containerEl, { autoplayMs = 5500 } = {}) {
   resetAutoplay();
 }
 
+function initAutoScrollTestimonials() {
+  const track = document.querySelector('.testimonial-track');
+  if (!track || window.innerWidth > 760) return;
+
+  const children = [...track.children];
+  if (!children.length) return;
+
+  children.forEach((child) => track.appendChild(child.cloneNode(true)));
+  let step = 0;
+  let timer;
+
+  function advance() {
+    const cardWidth = children[0]?.getBoundingClientRect().width || 320;
+    const gap = parseFloat(getComputedStyle(track).gap) || 24;
+    const distance = cardWidth + gap;
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    step += distance;
+    if (step >= maxScroll) {
+      step = 0;
+      track.scrollTo({ left: 0, behavior: 'smooth' });
+      return;
+    }
+    track.scrollTo({ left: step, behavior: 'smooth' });
+  }
+
+  function start() {
+    clearInterval(timer);
+    timer = setInterval(advance, 1800);
+  }
+
+  track.addEventListener('mouseenter', () => clearInterval(timer));
+  track.addEventListener('mouseleave', start);
+  start();
+}
+
 /* ---------- Count-up numbers (hero stats) ---------- */
 function initCountUp() {
   const els = document.querySelectorAll('[data-count-to]');
@@ -164,4 +231,7 @@ function initTiltHover(selector) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', initCountUp);
+document.addEventListener('DOMContentLoaded', () => {
+  initCountUp();
+  initAutoScrollTestimonials();
+});
