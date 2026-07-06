@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Received — FAAF Collections & Souvenirs</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+<meta name="ga-measurement-id" content=""> <!-- paste your GA4 Measurement ID here, e.g. G-XXXXXXXXXX, to enable analytics -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="site-header" data-active=""></div>
+
+<section class="section" style="padding:100px 0;">
+  <div class="container" style="max-width:560px;text-align:center;">
+    <div class="confirm-check">✓</div>
+    <div class="eyebrow" style="justify-content:center;">Order Received</div>
+    <h1 style="font-size:clamp(30px,4vw,42px);margin-bottom:14px;">Thank you! We've got your order.</h1>
+    <p style="color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:8px;" id="confirmRefLine">Order reference: —</p>
+    <p style="color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:34px;">
+      One last step — send your order details to us on WhatsApp so we can confirm payment and get it ready for you.
+    </p>
+    <a id="confirmWaBtn" href="#" class="btn btn-gold" style="width:100%;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 20l1.1-5.4A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+      Message Us on WhatsApp
+    </a>
+    <a href="shop.html" class="btn btn-outline" style="width:100%;margin-top:12px;">Continue Shopping</a>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/partials.js"></script>
+<script src="assets/js/demo-data.js?v=static-demo-4"></script>
+<script src="assets/js/main.js?v=static-demo-4"></script>
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/wishlist.js"></script>
+<script>
+document.addEventListener('partialsReady', () => {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  const wa = params.get('wa');
+
+  if (!ref || !wa) {
+    document.querySelector('.container').innerHTML = `
+      <h1 style="font-size:28px;margin-bottom:14px;">No order to show</h1>
+      <p style="color:var(--muted);margin-bottom:26px;">This page is shown right after checkout. Looks like you navigated here directly.</p>
+      <a href="shop.html" class="btn btn-gold">Back to Shop</a>
+    `;
+    return;
+  }
+
+  document.querySelector('#confirmRefLine').textContent = `Order reference: ${ref}`;
+  const waBtn = document.querySelector('#confirmWaBtn');
+  waBtn.href = wa;
+
+  // open WhatsApp automatically in a new tab for convenience
+  window.open(wa, '_blank');
+});
+</script>
+</body>
+</html>
+

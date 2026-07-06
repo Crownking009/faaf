@@ -1,0 +1,28 @@
+# FAAF Collections & Souvenirs — Apache config for shared hosting (cPanel)
+
+# Protect sensitive folders from direct browsing
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+# Deny access to raw SQL files via browser
+<FilesMatch "\.(sql|md)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+  php_flag display_errors off
+</IfModule>
+
+# Default document
+DirectoryIndex index.html
+
+# Custom error page
+ErrorDocument 404 /404.html
+
+# Basic security headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

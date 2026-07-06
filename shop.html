@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop All — FAAF Collections & Souvenirs</title>
+<meta name="description" content="Browse jeans, t-shirts, jean skirts, short dresses, Jalabia, Abayah, shoes, slippers, bags, sunglasses and party souvenirs for men and women.">
+<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+<meta name="ga-measurement-id" content=""> <!-- paste your GA4 Measurement ID here, e.g. G-XXXXXXXXXX, to enable analytics -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="site-header" data-active="shop"></div>
+
+<section class="page-header">
+  <div class="container">
+    <div class="eyebrow" style="justify-content:center;">Shop All</div>
+    <h1>Every style, in one place.</h1>
+    <div class="crumb">Home / Shop</div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:56px;">
+  <div class="container">
+    <div class="shop-layout">
+
+      <!-- ===== Filters sidebar ===== -->
+      <aside class="shop-filters reveal">
+        <div class="filter-group">
+          <h5>Category</h5>
+          <div id="categoryFilters"><!-- injected --></div>
+        </div>
+        <div class="filter-group">
+          <h5>Gender</h5>
+          <label class="filter-option"><span><input type="radio" name="genderFilter" value="" checked> All</span></label>
+          <label class="filter-option"><span><input type="radio" name="genderFilter" value="male"> Male</span></label>
+          <label class="filter-option"><span><input type="radio" name="genderFilter" value="female"> Female</span></label>
+          <label class="filter-option"><span><input type="radio" name="genderFilter" value="unisex"> Unisex</span></label>
+        </div>
+        <div class="filter-group">
+          <h5>Price Range (₦)</h5>
+          <div class="price-range">
+            <input type="number" id="minPrice" placeholder="Min">
+            <span>—</span>
+            <input type="number" id="maxPrice" placeholder="Max">
+          </div>
+        </div>
+        <span class="clear-filters" onclick="clearAllFilters()">Clear all filters</span>
+      </aside>
+
+      <!-- ===== Products ===== -->
+      <div>
+        <div class="active-chips" id="activeChips"></div>
+        <div class="shop-toolbar">
+          <span class="count" id="resultCount">Loading products…</span>
+          <div class="toolbar-right">
+            <div class="shop-search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="shopSearchInput" placeholder="Search products…">
+            </div>
+            <select class="sort-select" id="sortSelect">
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="name_asc">Name: A–Z</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="product-grid cols-shop" id="shopGrid">
+          <!-- skeletons / products injected by JS -->
+        </div>
+        <div class="pagination" id="shopPagination"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<!-- Quick View Modal -->
+<div class="modal-overlay" id="quickViewModal">
+  <div class="modal-box" style="max-width:820px;">
+    <div class="qv-grid" id="quickViewContent"><!-- injected --></div>
+  </div>
+</div>
+
+<script src="assets/js/partials.js"></script>
+<script src="assets/js/demo-data.js?v=static-demo-4"></script>
+<script src="assets/js/main.js?v=static-demo-4"></script>
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/wishlist.js"></script>
+<script src="assets/js/shop.js"></script>
+</body>
+</html>
+

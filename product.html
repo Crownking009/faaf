@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Product — FAAF Collections & Souvenirs</title>
+<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+<meta name="ga-measurement-id" content=""> <!-- paste your GA4 Measurement ID here, e.g. G-XXXXXXXXXX, to enable analytics -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="site-header" data-active="shop"></div>
+
+<section class="section" style="padding-top:44px;">
+  <div class="container">
+    <div class="crumb" style="font-family:var(--font-mono);font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:26px;" id="crumbTrail">Home / Shop / …</div>
+    <div id="productDetail" class="qv-grid" style="gap:60px;">
+      <div style="grid-column:1/-1;text-align:center;padding:100px 0;"><span class="spinner"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REVIEWS ============ -->
+<section class="section-tight bg-ivory">
+  <div class="container">
+    <div class="reviews-layout">
+      <div>
+        <div class="section-head reveal" style="margin-bottom:26px;">
+          <div>
+            <div class="eyebrow">Customer Reviews</div>
+            <h2 style="font-size:26px;">What buyers are saying.</h2>
+          </div>
+        </div>
+        <div id="reviewSummary" class="review-summary reveal"></div>
+        <div id="reviewsList" class="reviews-list reveal"></div>
+      </div>
+      <div class="reveal">
+        <div class="form-card-wrap" style="background:var(--white);border-radius:var(--radius-lg);padding:30px;border:1px solid var(--border);">
+          <h3 style="font-size:18px;margin-bottom:6px;">Write a Review</h3>
+          <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Reviews are checked before they go live.</p>
+          <form id="reviewForm">
+            <input type="text" name="website" id="reviewHoneypot" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+            <div class="field">
+              <label>Your Rating</label>
+              <div class="star-picker" id="starPicker">
+                ${[1,2,3,4,5].map(n => `<span data-star="${n}">★</span>`).join('')}
+              </div>
+            </div>
+            <div class="field"><label>Your Name</label><input type="text" id="reviewName" required></div>
+            <div class="field"><label>Your Review</label><textarea id="reviewText" rows="3" placeholder="Tell us about the fit, quality, delivery…"></textarea></div>
+            <div class="field-error" id="reviewError"></div>
+            <button type="submit" class="btn btn-gold btn-block">Submit Review</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RELATED ============ -->
+<section class="section bg-ivory">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow">You Might Also Like</div>
+        <h2>Complete the look.</h2>
+      </div>
+    </div>
+    <div class="product-grid reveal" id="relatedGrid"></div>
+  </div>
+</section>
+
+<!-- ============ RECENTLY VIEWED ============ -->
+<section class="section-tight" id="recentlyViewedSection" style="display:none;">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow">Continue Browsing</div>
+        <h2 style="font-size:24px;">Recently viewed.</h2>
+      </div>
+    </div>
+    <div class="product-grid reveal" id="recentlyViewedGrid"></div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<div class="sticky-atc" id="stickyAtc">
+  <img id="stickyAtcImg" src="" alt="">
+  <div class="info">
+    <b id="stickyAtcName"></b>
+    <span id="stickyAtcPrice"></span>
+  </div>
+  <button class="btn btn-gold" id="stickyAtcBtn" onclick="pdAddToCart(true)">Add to Bag</button>
+</div>
+
+<script src="assets/js/partials.js"></script>
+<script src="assets/js/demo-data.js?v=static-demo-4"></script>
+<script src="assets/js/main.js?v=static-demo-4"></script>
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/wishlist.js"></script>
+<script>
+const RECENTLY_VIEWED_KEY = 'faaf_recently_viewed_v1';
+let pdProduct = null;
+let pdSize = null;
+let pdColor = null;
+let pdQty = 1;
+let pdRating = 0;
+
+function listify(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (value == null) return [];
+  if (typeof value === 'string') return value.split(',').map(v => v.trim()).filter(Boolean);
+  return [value].filter(Boolean);
+}
+
+function getSlugFromURL() {
+  return new URLSearchParams(window.location.search).get('slug');
+}
+
+async function loadProduct() {
+  const slug = getSlugFromURL();
+  const wrap = document.querySelector('#productDetail');
+  if (!slug) { wrap.innerHTML = `<div style="grid-column:1/-1;">No product specified.</div>`; return; }
+
+  try {
+    const { product } = await apiGet(`/products.php?action=detail&slug=${encodeURIComponent(slug)}`);
+    pdProduct = product;
+    const sizes = listify(product.sizes);
+    const colors = listify(product.colors);
+    pdSize = sizes[0] || null;
+    pdColor = colors[0] || null;
+    document.title = `${product.name} — FAAF Collections & Souvenirs`;
+    document.querySelector('#crumbTrail').innerHTML = `<a href="index.html">Home</a> / <a href="shop.html">Shop</a> / ${escapeHtml(product.category_name)} / ${escapeHtml(product.name)}`;
+    renderProduct();
+    loadRelated(product.category_slug, product.id);
+    loadReviews(product.id);
+    trackRecentlyViewed(product);
+    renderRecentlyViewed(product.id);
+    injectProductSchema(product);
+  } catch (e) {
+    wrap.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;">
+      <h3>Product not found</h3>
+      <p style="color:var(--muted);margin:12px 0 22px;">This item may have been removed or is no longer available.</p>
+      <a href="shop.html" class="btn btn-gold">Back to Shop</a>
+    </div>`;
+  }
+}
+
+function renderProduct() {
+  const p = pdProduct;
+  const images = listify(p.images);
+  const sizes = listify(p.sizes);
+  const colors = listify(p.colors);
+  const displayImages = images.length ? images : [`https://placehold.co/700x860/c9a227/15130f?text=${encodeURIComponent(p.name)}`];
+  const wrap = document.querySelector('#productDetail');
+  const oos = p.stock <= 0;
+  const lowStock = p.stock > 0 && p.stock <= 5;
+  const wished = isWishlisted(p.id);
+
+  wrap.innerHTML = `
+    <div>
+      <div class="pd-image-zoom-wrap" id="pdImageWrap">
+        <img id="pdMainImg" src="${displayImages[0]}" alt="${escapeHtml(p.name)}" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;${oos ? 'opacity:.55;filter:grayscale(.3);' : ''}">
+        ${oos ? `<div class="pd-oos-badge">Out of Stock</div>` : ''}
+      </div>
+      <div class="zoom-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        Click the photo to zoom in
+      </div>
+      ${displayImages.length > 1 ? `<div class="qv-thumbs">${displayImages.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onclick="pdSwitchImg('${img}', this)">`).join('')}</div>` : ''}
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="cat" style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;">${escapeHtml(p.category_name)} · ${p.gender.charAt(0).toUpperCase() + p.gender.slice(1)}</div>
+        <button class="wishlist-heart ${wished ? 'active' : ''}" id="pdWishlistBtn" style="position:static;box-shadow:none;background:var(--ivory);" aria-label="Save to wishlist">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+        </button>
+      </div>
+      <h1 style="font-size:34px;margin:8px 0 14px;">${escapeHtml(p.name)}</h1>
+      <div class="price" style="margin-bottom:10px;"><span class="now" style="font-size:24px;">${formatCurrency(p.price)}</span> ${p.compare_price ? `<span class="was" style="font-size:16px;">${formatCurrency(p.compare_price)}</span>` : ''}</div>
+      <div id="pdRatingSummary" style="margin-bottom:16px;"></div>
+      ${lowStock ? `<div class="low-stock-hint" style="margin-bottom:14px;">Only ${p.stock} left in stock — order soon</div>` : ''}
+      <p style="font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:26px;max-width:460px;">${escapeHtml(p.description || 'A FAAF Collections favorite — quality fabric, comfortable fit, made to last through every wear.')}</p>
+
+      ${sizes.length ? `
+      <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:block;">Size</label>
+      <div class="size-row">${sizes.map(s => `<div class="swatch ${s === pdSize ? 'active' : ''}" onclick="pdSelectOption('size','${s}',this)">${escapeHtml(s)}</div>`).join('')}</div>` : ''}
+
+      ${colors.length ? `
+      <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:block;">Color</label>
+      <div class="color-row">${colors.map(c => `<div class="swatch ${c === pdColor ? 'active' : ''}" onclick="pdSelectOption('color','${c}',this)">${escapeHtml(c)}</div>`).join('')}</div>` : ''}
+
+      <div id="pdVariantStockHint" style="margin-bottom:10px;"></div>
+
+      <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:block;">Quantity</label>
+      <div class="qty-stepper" style="margin-bottom:24px;">
+        <button onclick="pdChangeQty(-1)">−</button><span id="pdQtyDisplay">1</span><button onclick="pdChangeQty(1)">+</button>
+      </div>
+
+      <div style="display:flex;gap:12px;" id="pdCtaRow">
+        <button class="btn btn-gold" style="flex:1;" onclick="pdAddToCart()" ${oos ? 'disabled' : ''}>${oos ? 'Out of Stock' : 'Add to Bag'}</button>
+        <button class="btn btn-outline" onclick="pdBuyNow()" ${oos ? 'disabled' : ''}>Buy Now</button>
+      </div>
+
+      <div style="margin-top:30px;padding-top:26px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--muted);">
+        <div>🏬 &nbsp;Pickup available at No 2 Church Avenue, off A.I.T. Road, Alagbado, Lagos</div>
+        <div>🛵 &nbsp;Delivery fee calculated by distance at checkout</div>
+        <div>💬 &nbsp;Order confirmed &amp; paid directly via WhatsApp</div>
+      </div>
+    </div>
+  `;
+
+  document.querySelector('#pdWishlistBtn').addEventListener('click', () => {
+    const img = displayImages[0];
+    toggleWishlist({ product_id: p.id, name: p.name, price: parseFloat(p.price), image: img, slug: p.slug }, document.querySelector('#pdWishlistBtn'));
+  });
+
+  document.querySelector('#stickyAtcImg').src = displayImages[0];
+  document.querySelector('#stickyAtcName').textContent = p.name;
+  document.querySelector('#stickyAtcPrice').textContent = formatCurrency(p.price);
+  const stickyBtn = document.querySelector('#stickyAtcBtn');
+  stickyBtn.disabled = oos;
+  stickyBtn.textContent = oos ? 'Out of Stock' : 'Add to Bag';
+
+  initProductZoom();
+  initStickyAddToCart();
+  updateVariantAvailability();
+}
+
+function initProductZoom() {
+  const zoomWrap = document.querySelector('#pdImageWrap');
+  const img = document.querySelector('#pdMainImg');
+  if (!zoomWrap || !img) return;
+  zoomWrap.addEventListener('click', () => zoomWrap.classList.toggle('zoomed'));
+  zoomWrap.addEventListener('mousemove', (e) => {
+    if (!zoomWrap.classList.contains('zoomed')) return;
+    const rect = zoomWrap.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    img.style.transformOrigin = `${x}% ${y}%`;
+  });
+  zoomWrap.addEventListener('mouseleave', () => zoomWrap.classList.remove('zoomed'));
+}
+
+function initStickyAddToCart() {
+  const ctaRow = document.querySelector('#pdCtaRow');
+  const bar = document.querySelector('#stickyAtc');
+  if (!ctaRow || !bar || !('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const scrolledPast = entry.boundingClientRect.top < 0;
+      const shouldShow = !entry.isIntersecting && scrolledPast;
+      bar.classList.toggle('show', shouldShow);
+      document.body.classList.toggle('has-sticky-atc', shouldShow);
+    });
+  }, { threshold: 0 });
+  io.observe(ctaRow);
+}
+
+function pdSwitchImg(src, el) {
+  document.querySelector('#pdMainImg').src = src;
+  document.querySelector('#stickyAtcImg').src = src;
+  el.parentElement.querySelectorAll('img').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+function pdSelectOption(type, value, el) {
+  if (type === 'size') pdSize = value;
+  if (type === 'color') pdColor = value;
+  el.parentElement.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  updateVariantAvailability();
+}
+
+function findMatchingVariant() {
+  const p = pdProduct;
+  if (!p.variants || !p.variants.length) return null;
+  return p.variants.find(v => (v.size || null) === (pdSize || null) && (v.color || null) === (pdColor || null)) || null;
+}
+
+function updateVariantAvailability() {
+  const p = pdProduct;
+  if (!p.variants || !p.variants.length) return; // no per-variant tracking on this product
+
+  const variant = findMatchingVariant();
+  const stock = variant ? parseInt(variant.stock, 10) : 0;
+  const addBtn = document.querySelector('#pdCtaRow button:first-child');
+  const buyBtn = document.querySelector('#pdCtaRow button:last-child');
+  const hint = document.querySelector('#pdVariantStockHint');
+
+  const outOfStock = stock <= 0;
+  addBtn.disabled = outOfStock;
+  buyBtn.disabled = outOfStock;
+  addBtn.textContent = outOfStock ? 'Out of Stock' : 'Add to Bag';
+
+  if (hint) {
+    if (outOfStock) {
+      hint.innerHTML = `<span style="color:var(--danger);font-weight:700;">Out of stock for this option</span>`;
+    } else if (stock <= 5) {
+      hint.innerHTML = `<span class="low-stock-hint">Only ${stock} left for this option</span>`;
+    } else {
+      hint.innerHTML = '';
+    }
+  }
+}
+function pdChangeQty(delta) {
+  pdQty = Math.max(1, pdQty + delta);
+  document.querySelector('#pdQtyDisplay').textContent = pdQty;
+}
+function pdAddToCart(fromStickyBar) {
+  const p = pdProduct;
+  if (p.stock <= 0) return;
+  const variant = findMatchingVariant();
+  if (variant && parseInt(variant.stock, 10) <= 0) { showToast('That option is out of stock'); return; }
+  const img = p.images[0] || `https://placehold.co/600x740/c9a227/15130f?text=${encodeURIComponent(p.name)}`;
+  const sourceImgEl = document.querySelector(fromStickyBar ? '#stickyAtcImg' : '#pdMainImg');
+  if (sourceImgEl) flyToCart(sourceImgEl);
+  addToCart({ product_id: p.id, name: p.name, price: parseFloat(p.price), image: img, size: pdSize, color: pdColor, quantity: pdQty });
+}
+function pdBuyNow() {
+  if (pdProduct.stock <= 0) return;
+  pdAddToCart();
+  setTimeout(() => openCheckout(), 300);
+}
+
+async function loadRelated(categorySlug, excludeId) {
+  try {
+    const { products } = await apiGet(`/products.php?category=${categorySlug}&per_page=20`);
+    let filtered = products.filter(p => p.id !== excludeId).slice(0, 4);
+
+    if (filtered.length < 4) {
+      try {
+        const { products: featured } = await apiGet('/products.php?featured=1&per_page=20');
+        const extra = featured.filter(p => p.id !== excludeId && !filtered.some(f => f.id === p.id));
+        filtered = filtered.concat(extra).slice(0, 4);
+      } catch (e) { /* ignore */ }
+    }
+
+    const grid = document.querySelector('#relatedGrid');
+    if (!filtered.length) { document.querySelector('#relatedGrid').closest('section').style.display = 'none'; return; }
+    grid.innerHTML = filtered.map(p => {
+      const img = p.image || `https://placehold.co/600x740/c9a227/15130f?text=${encodeURIComponent(p.name)}`;
+      const altImg = p.images && p.images.length > 1 ? p.images[1] : '';
+      return `
+      <div class="product-card">
+        <a href="product.html?slug=${p.slug}" class="frame">
+          <img class="main" src="${img}" alt="${escapeHtml(p.name)}">
+          ${altImg ? `<img class="alt" src="${altImg}" alt="${escapeHtml(p.name)} alternate view">` : ''}
+        </a>
+        <div class="product-info">
+          <div class="cat">${escapeHtml(p.category_name)}</div>
+          <a href="product.html?slug=${p.slug}"><h3>${escapeHtml(p.name)}</h3></a>
+          <div class="price"><span class="now">${formatCurrency(p.price)}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { /* ignore */ }
+}
+
+// ---------- Reviews ----------
+async function loadReviews(productId) {
+  try {
+    const { reviews, average_rating, count } = await apiGet(`/reviews.php?product_id=${productId}`);
+    const summaryEl = document.querySelector('#reviewSummary');
+    const listEl = document.querySelector('#reviewsList');
+    const pdRatingEl = document.querySelector('#pdRatingSummary');
+
+    if (pdRatingEl) {
+      pdRatingEl.innerHTML = count > 0
+        ? `<span style="color:var(--gold);letter-spacing:1px;">${starString(average_rating)}</span> <span style="font-size:13px;color:var(--muted);">${average_rating} (${count} review${count === 1 ? '' : 's'})</span>`
+        : `<span style="font-size:13px;color:var(--muted);">No reviews yet — be the first!</span>`;
+    }
+
+    summaryEl.innerHTML = count > 0
+      ? `<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:22px;">
+           <span style="font-family:var(--font-display);font-size:40px;font-weight:700;">${average_rating}</span>
+           <div><div style="color:var(--gold);letter-spacing:2px;font-size:15px;">${starString(average_rating)}</div><div style="font-size:12.5px;color:var(--muted);">Based on ${count} review${count === 1 ? '' : 's'}</div></div>
+         </div>`
+      : `<p style="color:var(--muted);font-size:14px;margin-bottom:22px;">This product doesn't have any reviews yet.</p>`;
+
+    listEl.innerHTML = reviews.map(r => `
+      <div class="review-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <b style="font-size:14px;">${escapeHtml(r.reviewer_name)}</b>
+          <span style="color:var(--gold);font-size:13px;letter-spacing:1px;">${starString(r.rating)}</span>
+        </div>
+        ${r.review_text ? `<p style="font-size:13.5px;color:var(--muted);line-height:1.6;">${escapeHtml(r.review_text)}</p>` : ''}
+      </div>
+    `).join('');
+
+    if (count > 0) addAggregateRatingToSchema(average_rating, count);
+  } catch (e) { /* ignore */ }
+}
+
+function addAggregateRatingToSchema(avg, count) {
+  const scriptEl = document.querySelector('#productSchema');
+  if (!scriptEl) return;
+  try {
+    const schema = JSON.parse(scriptEl.textContent);
+    schema.aggregateRating = { '@type': 'AggregateRating', ratingValue: avg, reviewCount: count };
+    scriptEl.textContent = JSON.stringify(schema);
+  } catch (e) { /* ignore */ }
+}
+
+function starString(rating) {
+  const rounded = Math.round(rating);
+  return '★'.repeat(rounded) + '☆'.repeat(5 - rounded);
+}
+
+function initReviewForm() {
+  const picker = document.querySelector('#starPicker');
+  picker.querySelectorAll('span').forEach(star => {
+    star.addEventListener('click', () => {
+      pdRating = parseInt(star.dataset.star, 10);
+      picker.querySelectorAll('span').forEach(s => s.classList.toggle('active', parseInt(s.dataset.star, 10) <= pdRating));
+    });
+  });
+
+  document.querySelector('#reviewForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.querySelector('#reviewError');
+    errorBox.classList.remove('show');
+    const name = document.querySelector('#reviewName').value.trim();
+    const text = document.querySelector('#reviewText').value.trim();
+
+    if (!name || !pdRating) {
+      errorBox.textContent = 'Please add your name and select a star rating.';
+      errorBox.classList.add('show');
+      return;
+    }
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      const res = await apiPost('/reviews.php', { product_id: pdProduct.id, reviewer_name: name, rating: pdRating, review_text: text, website: document.querySelector('#reviewHoneypot').value });
+      showToast(res.message || 'Thanks for your review!');
+      e.target.reset();
+      pdRating = 0;
+      picker.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+    } catch (err) {
+      errorBox.textContent = err.message || 'Could not submit your review. Please try again.';
+      errorBox.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Submit Review';
+    }
+  });
+}
+
+// ---------- Recently viewed ----------
+function trackRecentlyViewed(p) {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY)) || []; } catch { list = []; }
+  list = list.filter(item => item.id !== p.id);
+  list.unshift({ id: p.id, name: p.name, price: p.price, slug: p.slug, image: p.images[0] || '', images: p.images || [], category_name: p.category_name });
+  list = list.slice(0, 8);
+  localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(list));
+}
+
+function renderRecentlyViewed(currentId) {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY)) || []; } catch { list = []; }
+  list = list.filter(item => item.id !== currentId).slice(0, 4);
+  if (!list.length) return;
+
+  document.querySelector('#recentlyViewedSection').style.display = '';
+  document.querySelector('#recentlyViewedGrid').innerHTML = list.map(p => {
+    const img = p.image || `https://placehold.co/600x740/c9a227/15130f?text=${encodeURIComponent(p.name)}`;
+    const altImg = p.images && p.images.length > 1 ? p.images[1] : '';
+    return `
+    <div class="product-card">
+      <a href="product.html?slug=${p.slug}" class="frame">
+        <img class="main" src="${img}" alt="${escapeHtml(p.name)}">
+        ${altImg ? `<img class="alt" src="${altImg}" alt="${escapeHtml(p.name)} alternate view">` : ''}
+      </a>
+      <div class="product-info">
+        <div class="cat">${escapeHtml(p.category_name || '')}</div>
+        <a href="product.html?slug=${p.slug}"><h3>${escapeHtml(p.name)}</h3></a>
+        <div class="price"><span class="now">${formatCurrency(p.price)}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function injectProductSchema(p) {
+  const images = p.images && p.images.length ? p.images : [];
+  const schema = {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: p.name,
+    image: images,
+    description: p.description || `${p.name} — available at FAAF Collections & Souvenirs.`,
+    sku: String(p.id),
+    brand: { '@type': 'Brand', name: 'FAAF Collections & Souvenirs' },
+    offers: {
+      '@type': 'Offer',
+      url: window.location.href,
+      priceCurrency: 'NGN',
+      price: p.price,
+      availability: p.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  };
+  const existing = document.querySelector('#productSchema');
+  if (existing) existing.remove();
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.id = 'productSchema';
+  script.textContent = JSON.stringify(schema);
+  document.head.appendChild(script);
+}
+
+let productPageInitialized = false;
+function initProductPage() {
+  if (productPageInitialized) return;
+  productPageInitialized = true;
+  loadProduct();
+  initReviewForm();
+}
+document.addEventListener('partialsReady', initProductPage);
+document.addEventListener('DOMContentLoaded', () => setTimeout(initProductPage, 0));
+</script>
+</body>
+</html>
+
